@@ -10,6 +10,6 @@
 
 ## Updates Futuros
 
-- [ ] Exercícios semanais das diversas disciplinas
+- [ ] Exercícios semanais de diversas disciplinas
 - [ ] Maior auto-moderação
       
