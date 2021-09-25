@@ -6,6 +6,7 @@
 - Atribuição automática de Roles
 - Anúncios em diversos canais
 - Técnica Pomodoro
+- Sistema de perguntas/respostas 
 
 
 ## Updates Futuros
