@@ -3,7 +3,7 @@ import os
 import config
 import json
 from discord.ext import commands
-from .roles_messages import role_message, role_message_uni, greet_message
+from .roles_messages import role_message, role_message_uni, role_message_disciplines, greet_message
 
 here = os.path.dirname(os.path.abspath(__file__))
 filename = os.path.join(here, 'stored_values.json')
@@ -14,10 +14,12 @@ with open(filename) as file:
     except FileNotFoundError:
         storage = {}
 
+
 def may_use_command(member):
     allowed_roles = ["admin"]
     roles = [discord.utils.get(member.guild.roles, name=role_name) for role_name in allowed_roles]
     return any(role in roles for role in member.roles)
+
 
 class roles(commands.Cog):
     def __init__(self, client):
@@ -25,7 +27,6 @@ class roles(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        print("Ready!")
         self.guild = self.client.get_guild(config.ID_GUILD)
 
         self.default_role = self.guild.get_role(config.ID_DEFAULT_ROLE)
@@ -33,6 +34,13 @@ class roles(commands.Cog):
         self.decimoprimeiro_role = self.guild.get_role(config.ID_DECIMOPRIMEIRO_ROLE)
         self.decimosegundo_role = self.guild.get_role(config.ID_DECIMOSEGUNDO_ROLE)
         self.universidade_role = self.guild.get_role(config.ID_UNIVERSIDADE_ROLE)
+
+        self.mat_role = self.guild.get_role(config.ID_MAT_ROLE)
+        self.fis_role = self.guild.get_role(config.ID_FIS_ROLE)
+        self.chem_role = self.guild.get_role(config.ID_CHEM_ROLE)
+        self.bio_role = self.guild.get_role(config.ID_BIO_ROLE)
+        self.geo_role = self.guild.get_role(config.ID_GEO_ROLE)
+        self.pt_role = self.guild.get_role(config.ID_PT_ROLE)
 
         self.decimosegundo_emoji = "🔵"
         self.decimoprimeiro_emoji = "🟣"
@@ -46,10 +54,10 @@ class roles(commands.Cog):
     @commands.Cog.listener()
     async def on_member_join(self, member):
         await self.greet_channel.send(greet_message(
-            member, 
-            self.rules_channel, 
+            member,
+            self.rules_channel,
             self.roles_channel)
-            )
+        )
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload):
@@ -69,7 +77,20 @@ class roles(commands.Cog):
         if "role_message_uni" in storage:
             if str(payload.emoji) == str(self.universidade_emoji):
                 await member.add_roles(self.universidade_role, self.default_role)
-                
+
+        if "role_message_disciplines" in storage:
+            if str(payload.emoji) == "📐":
+                await member.add_roles(self.mat_role)
+            elif str(payload.emoji) == "🪂":
+                await member.add_roles(self.fis_role)
+            elif str(payload.emoji) == "💧":
+                await member.add_roles(self.chem_role)
+            elif str(payload.emoji) == "🌱":
+                await member.add_roles(self.bio_role)
+            elif str(payload.emoji) == "⛏":
+                await member.add_roles(self.geo_role)
+            elif str(payload.emoji) == "🇵🇹":
+                await member.add_roles(self.pt_role)
 
     @commands.Cog.listener()
     async def on_raw_reaction_remove(self, payload):
@@ -87,6 +108,20 @@ class roles(commands.Cog):
         if "role_message_uni" in storage:
             if str(payload.emoji) == str(self.universidade_emoji):
                 await member.remove_roles(self.universidade_role)
+
+        if "role_message_disciplines" in storage:
+            if str(payload.emoji) == "📐":
+                await member.remove_roles(self.mat_role)
+            elif str(payload.emoji) == "🪂":
+                await member.remove_roles(self.fis_role)
+            elif str(payload.emoji) == "💧":
+                await member.remove_roles(self.chem_role)
+            elif str(payload.emoji) == "🌱":
+                await member.remove_roles(self.bio_role)
+            elif str(payload.emoji) == "⛏":
+                await member.remove_roles(self.geo_role)
+            elif str(payload.emoji) == "🇵🇹":
+                await member.remove_roles(self.pt_role)
 
     @commands.command(name="send_role_message")
     @commands.guild_only()
@@ -123,6 +158,7 @@ class roles(commands.Cog):
                 await ctx.channel.send("Já existe uma mensagem com a role de universitário")
 
             else:
+                print(self.roles_channel)
                 sent_message = await self.roles_channel.send(
                     embed=role_message_uni(self.universidade_emoji))
 
@@ -131,6 +167,34 @@ class roles(commands.Cog):
 
                 # Store message in storage dict
                 storage["role_message_uni"] = sent_message.id
+
+                # Store message in json file
+                with open(filename, "w") as file:
+                    json.dump(storage, file)
+
+    @commands.command(name="send_role_message_disciplines")
+    @commands.guild_only()
+    async def send_role_message_disciplines(self, ctx):
+        if not may_use_command(ctx.author):
+            raise PermissionError
+        else:
+            if "role_message_disciplines" in storage:
+                await ctx.channel.send("Já existe uma mensagem com a seleção das roles")
+
+            else:
+                sent_message = await self.roles_channel.send(
+                    embed=role_message_disciplines())
+
+                # Add reactions to the message
+                await sent_message.add_reaction("📐")
+                await sent_message.add_reaction("🪂")
+                await sent_message.add_reaction("💧")
+                await sent_message.add_reaction("🌱")
+                await sent_message.add_reaction("⛏")
+                await sent_message.add_reaction("🇵🇹")
+
+                # Store message in storage dict
+                storage["role_message_disciplines"] = sent_message.id
 
                 # Store message in json file
                 with open(filename, "w") as file:

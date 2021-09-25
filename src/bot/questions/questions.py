@@ -74,17 +74,18 @@ class questions(commands.Cog):
             return
 
         for stored_question in stored_questions[member.id]:
-            if stored_question["channel"] == payload.channel_id and not stored_question["solved"]:
-                current_question = question(
-                    self.guild.get_member(stored_question["member"]),
-                    self.guild.get_channel(stored_question["channel"]),
-                    self.guild.get_role(stored_question["discipline_role"]),
-                    True,
-                    await self.guild.get_channel(stored_question["channel"]).fetch_message(stored_question["sent_message"])
-                )
+            if str(payload.emoji) == "✅":
+                if stored_question["channel"] == payload.channel_id and not stored_question["solved"]:
+                    current_question = question(
+                        self.guild.get_member(stored_question["member"]),
+                        self.guild.get_channel(stored_question["channel"]),
+                        self.guild.get_role(stored_question["discipline_role"]),
+                        True,
+                        await self.guild.get_channel(stored_question["channel"]).fetch_message(stored_question["sent_message"])
+                    )
 
-                await current_question.update_question_message(await self.guild.get_channel(stored_question["channel"]).fetch_message(payload.message_id))
-                stored_question["solved"] = True
+                    await current_question.update_question_message(await self.guild.get_channel(stored_question["channel"]).fetch_message(payload.message_id))
+                    stored_question["solved"] = True
 
 
     @commands.command(name="ajuda")
