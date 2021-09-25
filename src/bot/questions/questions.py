@@ -5,7 +5,6 @@ import discord
 import json
 import os
 
-
 # TODO: Remove redundancies in the file
 # TODO: Work with question objects or keep the dictionary, where is the bridge between both?
 
@@ -14,12 +13,13 @@ filename = os.path.join(here, 'stored_values.json')
 
 try:
     with open(filename) as file:
-            stored_questions = json.load(file)
+        stored_questions = json.load(file)
 
 except FileNotFoundError:
     stored_questions = {}
 
 disciplines = ["Matemática", "Física", "Biologia", "Química"]
+
 
 class question():
     def __init__(self, member, channel, discipline_role, solved, sent_message):
@@ -33,7 +33,6 @@ class question():
         emb = initial_question_embed_template()
         await self.channel.send(f"{self.discipline_role.mention}")
         self.sent_message = await self.channel.send(embed=emb)
-
 
     async def update_question_message(self, reacted_message):
         if self.solved:
@@ -81,14 +80,15 @@ class questions(commands.Cog):
                         self.guild.get_channel(stored_question["channel"]),
                         self.guild.get_role(stored_question["discipline_role"]),
                         True,
-                        await self.guild.get_channel(stored_question["channel"]).fetch_message(stored_question["sent_message"])
+                        await self.guild.get_channel(stored_question["channel"]).fetch_message(
+                            stored_question["sent_message"])
                     )
 
-                    await current_question.update_question_message(await self.guild.get_channel(stored_question["channel"]).fetch_message(payload.message_id))
+                    await current_question.update_question_message(
+                        await self.guild.get_channel(stored_question["channel"]).fetch_message(payload.message_id))
                     stored_question["solved"] = True
 
-
-    @commands.command(name="ajuda")
+    @commands.command(name="ajuda", aliases=["pergunta", "dúvida", "questão"])
     async def open_question(self, ctx):
         member = ctx.message.author
         channel = ctx.message.channel
@@ -96,8 +96,12 @@ class questions(commands.Cog):
 
         # Search in the disciplines list
         for discipline in disciplines:
-            if channel.name == discipline.lower():
+            if discipline.lower() in channel.name:
                 discipline_name = discipline
+
+        # Return if no discipline was not found
+        if discipline_name == None:
+            return
 
         discipline_role = discord.utils.get(member.guild.roles, name=discipline_name)
         new_question = question(member, channel, discipline_role, False, None)
@@ -111,6 +115,7 @@ class questions(commands.Cog):
         # Store values in json file
         with open(filename, "w") as file:
             json.dump(stored_questions, file)
+
 
 def setup(client):
     client.add_cog(questions(client))
