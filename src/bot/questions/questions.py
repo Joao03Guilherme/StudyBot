@@ -1,5 +1,5 @@
 from discord.ext import commands
-from .questions_messages import initial_question_embed_template, solved_question_embed_template
+from .questions_messages import initial_question_embed_template, solved_question_embed_template, close_question_embed_template
 import config
 import discord
 import json
@@ -29,7 +29,7 @@ class question():
         self.solved = solved
         self.sent_message = sent_message
 
-    async def send_question_message(self):
+    async def initial_question_message(self):
         emb = initial_question_embed_template()
         await self.channel.send(f"{self.discipline_role.mention}")
         self.sent_message = await self.channel.send(embed=emb)
@@ -44,6 +44,10 @@ class question():
             # Reset the embed
             emb = initial_question_embed_template()
             await self.sent_message.edit(embed=emb)
+
+    async def close_question_message(self):
+        emb = close_question_embed_template()
+        await self.sent_message.edit(embed=emb)
 
     def to_dict(self):
         return {
@@ -72,7 +76,7 @@ class questions(commands.Cog):
         if member.id not in stored_questions:
             return
 
-        for stored_question in stored_questions[member.id]:
+        for stored_question in stored_questions:
             if str(payload.emoji) == "✅":
                 if stored_question["channel"] == payload.channel_id and not stored_question["solved"]:
                     current_question = question(
@@ -99,19 +103,22 @@ class questions(commands.Cog):
             if discipline.lower() in channel.name:
                 discipline_name = discipline
 
-        # Return if no discipline was not found
+        # Return if no discipline was found
         if discipline_name == None:
+            await channel.send("Este canal não é apropriado para iniciar questões.")
             return
 
+        # Check if user has active question
+        if member.id in stored_questions.keys():
+            await member.send("Foi criada uma nova questão.")
+            stored_questions[member.id].close_question_message()
+
+        # Create new message and add to dict
         discipline_role = discord.utils.get(member.guild.roles, name=discipline_name)
         new_question = question(member, channel, discipline_role, False, None)
-        await new_question.send_question_message()
-
-        if member.id in stored_questions:
-            stored_questions[member.id].append(new_question.to_dict())
-        else:
-            stored_questions[member.id] = [new_question.to_dict()]
-
+        await new_question.initial_question_message()
+        stored_questions[member.id] = new_question.to_dict()
+        
         # Store values in json file
         with open(filename, "w") as file:
             json.dump(stored_questions, file)
