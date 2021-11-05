@@ -5,6 +5,7 @@ import discord
 import json
 import os
 
+# TODO: Pass id to question object and initialize message on construction?
 # TODO: Remove redundancies in the file
 # TODO: Work with question objects or keep the dictionary, where is the bridge between both?
 
@@ -18,7 +19,7 @@ try:
 except FileNotFoundError:
     stored_questions = {}
 
-disciplines = ["Matemática", "Física", "Biologia", "Química"]
+disciplines = ["Matemática", "Física", "Biologia", "Química", "testes-do-bot"]
 
 
 class question():
@@ -104,14 +105,31 @@ class questions(commands.Cog):
                 discipline_name = discipline
 
         # Return if no discipline was found
-        if discipline_name == None:
+        if discipline_name is None:
             await channel.send("Este canal não é apropriado para iniciar questões.")
             return
 
-        # Check if user has active question
+        # Check if user has unanswered question
         if member.id in stored_questions.keys():
-            await member.send("Foi criada uma nova questão.")
-            stored_questions[member.id].close_question_message()
+            for question_dict in stored_questions[member.id]:
+                if not question_dict["solved"]:
+
+                    # Convert dict to question object
+                    current_question = question(
+                        self.guild.get_member(question_dict["member"]),
+                        self.guild.get_channel(question_dict["channel"]),
+                        self.guild.get_role(question_dict["discipline_role"]),
+                        True,
+                        await self.guild.get_channel(question_dict["channel"]).fetch_message(
+                            question_dict["sent_message"])
+                    )
+
+                    # Close question
+                    await current_question.close_question_message()
+                    await member.send("Foi criada uma nova questão.\nA questão que já estava ativa foi terminada")
+
+                    # Update solved status
+                    question_dict["solved"] = True
 
         # Create new message and add to dict
         discipline_role = discord.utils.get(member.guild.roles, name=discipline_name)
