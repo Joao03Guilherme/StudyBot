@@ -132,6 +132,7 @@ class questions(commands.Cog):
                 await member.send("⚠️ Foi criada uma nova questão. ⚠️\nA questão que já estava ativa foi fechada")
                 stored_questions[member.id] = None
 
+
         # Create new message and add to dict
         discipline_role = discord.utils.get(member.guild.roles, name=discipline_name)
         new_question = question(self.guild, member.id, channel.id, discipline_role.id, False, None)
