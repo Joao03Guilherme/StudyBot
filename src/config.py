@@ -1,6 +1,6 @@
 import os
 
-BOT_TOKEN = "ODc4Njc2OTgxNTUyNjY4Njky.YSEptQ.onrF5Yn-hfPEBTEhwl7AYOnz9pI"
+BOT_TOKEN = os.getenv(BOT_TOKEN)
 CMD_PREFIX = "!"
 TIMEZONE = "Europe/Lisbon"
 POMODORO_ITERATIONS = 4
