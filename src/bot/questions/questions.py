@@ -114,23 +114,23 @@ class questions(commands.Cog):
 
         # Check if user has unanswered question
         if member.id in stored_questions:
-            for member_id, stored_question in stored_questions.items():
-                if stored_question is not None:
+            stored_question = stored_questions[member.id]
 
-                    # Convert dict to question object
-                    closed_question = question(
-                        self.guild,
-                        stored_question["member"],
-                        stored_question["channel"],
-                        stored_question["discipline_role"],
-                        True,
-                        stored_question["sent_message"]
-                    )
+            if stored_question is not None:
+                # Convert dict to question object
+                closed_question = question(
+                    self.guild,
+                    stored_question["member"],
+                    stored_question["channel"],
+                    stored_question["discipline_role"],
+                    True,
+                    stored_question["sent_message"]
+                )
 
-                    # Close question
-                    await closed_question.close_question_message()
-                    await member.send("⚠️ Foi criada uma nova questão. ⚠️\nA questão que já estava ativa foi fechada")
-                    stored_questions[member_id] = None
+                # Close question
+                await closed_question.close_question_message()
+                await member.send("⚠️ Foi criada uma nova questão. ⚠️\nA questão que já estava ativa foi fechada")
+                stored_questions[member.id] = None
 
         # Create new message and add to dict
         discipline_role = discord.utils.get(member.guild.roles, name=discipline_name)
