@@ -24,5 +24,5 @@ int main(void){
         }
         cout << "\n";
     }
-    return 0;
+    return 0; 
 }
