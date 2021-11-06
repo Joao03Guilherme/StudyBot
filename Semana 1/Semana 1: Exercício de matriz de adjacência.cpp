@@ -6,7 +6,7 @@ int main(void){
     int n, m, v1, v2;
     cin >> n >> m;
     
-    int adj[n][n];
+    int adj[n][n]; 
     memset(adj, 0, sizeof(adj));
     
     for (int i = 0; i < m; i++)
