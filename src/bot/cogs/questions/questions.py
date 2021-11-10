@@ -84,8 +84,8 @@ class questions(commands.Cog):
 
         # Check if emoji is to answer question
         if str(payload.emoji) == "✅":
-            for stored_questions_list in stored_questions.values():
-                for i, stored_question in enumerate(stored_questions_list):
+            if member.id in stored_questions:
+                for i, stored_question in enumerate(stored_questions[member.id]):
                     if stored_question["channel"] == payload.channel_id:
                         solved_question = question(
                             self.guild,
@@ -97,7 +97,7 @@ class questions(commands.Cog):
                         )
 
                         await solved_question.update_question_message(payload.message_id)
-                        del stored_questions_list[i]
+                        del stored_questions[member.id][i]
                         return
 
     @commands.command(name="ajuda", aliases=["pergunta", "dúvida", "questão"])
