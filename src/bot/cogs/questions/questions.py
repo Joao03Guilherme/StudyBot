@@ -16,7 +16,9 @@ try:
 except FileNotFoundError:
     stored_questions = {}
 
-disciplines = ["Matemática", "Física", "Biologia", "Química", "Português", "Outras", "Geologia", "testes-do-bot"]
+disciplines = ["Matemática", "Física", "Biologia",
+                "Química", "Português", "Outras", 
+                "Geologia", "testes-do-bot", "testes-do-bot2"]
 
 
 class question():
@@ -83,15 +85,15 @@ class questions(commands.Cog):
         # Check if emoji is to answer question
         if str(payload.emoji) == "✅":
             for stored_questions_list in stored_questions.values():
-                for i in range(len(stored_questions_list)):
-                    if stored_questions_list[i]["channel"] == payload.channel_id:
+                for i, stored_question in enumerate(stored_questions_list):
+                    if stored_question["channel"] == payload.channel_id:
                         solved_question = question(
                             self.guild,
-                            stored_questions_list[i]["member"],
-                            stored_questions_list[i]["channel"],
-                            stored_questions_list[i]["discipline_role"],
+                            stored_question["member"],
+                            stored_question["channel"],
+                            stored_question["discipline_role"],
                             True,
-                            stored_questions_list[i]["sent_message"]
+                            stored_question["sent_message"]
                         )
 
                         await solved_question.update_question_message(payload.message_id)
@@ -116,8 +118,7 @@ class questions(commands.Cog):
 
         # Check if user has unanswered question in same channel
         if member.id in stored_questions:
-            for i in range(len(stored_questions[member.id])):
-                stored_question = stored_questions[member.id][i]
+            for i, stored_question in enumerate(stored_questions[member.id]):
                 if stored_question["channel"] == channel.id:
                     # Convert dict to question object
                     closed_question = question(
