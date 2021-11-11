@@ -153,7 +153,10 @@ class pomodoro(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        if message.channel.category == self.pomodoro_category:
+        if message.author == self.client.user:
+            return
+
+        if message.channel.category == self.pomodoro_category and not message.content.startswith("!pomodoro"):
             await message.delete()
 
     async def add_initial_timer(self, channel_id, member_id, pomodoro_duration, break_duration, long_break_duration):
