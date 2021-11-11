@@ -16,7 +16,9 @@ try:
 except FileNotFoundError:
     stored_questions = {}
 
-disciplines = ["Matemática", "Física", "Biologia", "Química", "Português", "Outras", "Geologia", "testes-do-bot"]
+disciplines = ["Matemática", "Física", "Biologia",
+                "Química", "Português", "Outras", 
+                "Geologia", "testes-do-bot", "testes-do-bot2"]
 
 
 class question():
@@ -80,21 +82,23 @@ class questions(commands.Cog):
         if member.id not in stored_questions or len(stored_questions[member.id]) == 0:
             return
 
-        # Check if emoji is to close question
+        # Check if emoji is to answer question
         if str(payload.emoji) == "✅":
-            for member_id, stored_question in stored_questions.items():
-                if stored_question is not None and stored_question["channel"] == payload.channel_id:
-                    solved_question = question(
-                        self.guild,
-                        stored_question["member"],
-                        stored_question["channel"],
-                        stored_question["discipline_role"],
-                        True,
-                        stored_question["sent_message"]
-                    )
+            if member.id in stored_questions:
+                for i, stored_question in enumerate(stored_questions[member.id]):
+                    if stored_question["channel"] == payload.channel_id:
+                        solved_question = question(
+                            self.guild,
+                            stored_question["member"],
+                            stored_question["channel"],
+                            stored_question["discipline_role"],
+                            True,
+                            stored_question["sent_message"]
+                        )
 
-                    await solved_question.update_question_message(payload.message_id)
-                    stored_questions[member_id] = None
+                        await solved_question.update_question_message(payload.message_id)
+                        del stored_questions[member.id][i]
+                        return
 
     @commands.command(name="ajuda", aliases=["pergunta", "dúvida", "questão"])
     async def open_question(self, ctx):
@@ -107,42 +111,44 @@ class questions(commands.Cog):
             if discipline.lower() in channel.name:
                 discipline_name = discipline
 
-        # Return if no discipline was found
+        # Return if no discipline is found
         if discipline_name is None:
             await channel.send("Este canal não é apropriado para iniciar questões.")
             return
 
-        # Check if user has unanswered question
+        # Check if user has unanswered question in same channel
         if member.id in stored_questions:
-            stored_question = stored_questions[member.id]
+            for i, stored_question in enumerate(stored_questions[member.id]):
+                if stored_question["channel"] == channel.id:
+                    # Convert dict to question object
+                    closed_question = question(
+                        self.guild,
+                        stored_question["member"],
+                        stored_question["channel"],
+                        stored_question["discipline_role"],
+                        True,
+                        stored_question["sent_message"]
+                    )
 
-            if stored_question is not None:
-                # Convert dict to question object
-                closed_question = question(
-                    self.guild,
-                    stored_question["member"],
-                    stored_question["channel"],
-                    stored_question["discipline_role"],
-                    True,
-                    stored_question["sent_message"]
-                )
+                    # Close question
+                    await closed_question.close_question_message()
+                    await member.send("⚠️ Foi criada uma nova questão. ⚠️\nA questão que já estava ativa foi fechada")
+                    del stored_questions[member.id][i]
 
-                # Close question
-                await closed_question.close_question_message()
-                await member.send("⚠️ Foi criada uma nova questão. ⚠️\nA questão que já estava ativa foi fechada")
-                stored_questions[member.id] = None
-
-
-        # Create new message and add to dict
+        # Create new message and add to user question list in dict
         discipline_role = discord.utils.get(member.guild.roles, name=discipline_name)
         new_question = question(self.guild, member.id, channel.id, discipline_role.id, False, None)
         await new_question.initial_question_message()
-        stored_questions[member.id] = new_question.to_dict()
+
+        # Check if exists already an entry for the user
+        if member.id in stored_questions:
+            stored_questions[member.id].append(new_question.to_dict())
+        else:
+            stored_questions[member.id] = [new_question.to_dict()]
 
         # Store values in json file
         with open(filename, "w") as file:
             json.dump(stored_questions, file)
-
 
 def setup(client):
     client.add_cog(questions(client))
