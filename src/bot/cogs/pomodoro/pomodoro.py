@@ -151,6 +151,11 @@ class pomodoro(commands.Cog):
 
                 await timer_obj.end_pomodoro_session()
 
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        if message.channel.category == self.pomodoro_category:
+            await message.delete()
+
     async def add_initial_timer(self, channel_id, member_id, pomodoro_duration, break_duration, long_break_duration):
         timer_obj = timer(
             self.guild,
