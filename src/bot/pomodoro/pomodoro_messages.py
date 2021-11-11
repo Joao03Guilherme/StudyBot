@@ -6,7 +6,9 @@ import pytz
 EMBED_COLOR = 0x04caff
 
 # TODO: ADICIONAR UMA IMAGEM AO EMBED PARA FICAR MAIS BONITO
-def break_running_embed_template(end_time, pomodoro):
+# TODO: ADICIONAR INDICAÇAO DA ITERAÇAO DE CADA POMODORO
+# TODO: CRIAR EMBED FUNCTIONS SEPARADAS PARA POMODORO E BREAK?
+def timer_running_embed_template(end_time, pomodoro):
     end_time_str = format_datetime_or_timedelta(end_time)
     time_remaining = end_time - pytz.utc.localize(datetime.utcnow())
     time_remaining_str = format_datetime_or_timedelta(time_remaining)
@@ -17,8 +19,8 @@ def break_running_embed_template(end_time, pomodoro):
     embed.add_field(name="Tempo restante: ", value=time_remaining_str, inline=False)
     return embed
 
-
-def break_ended_embed_template(end_time, pomodoro):
+# TODO: CRIAR EMBED FUNCTIONS SEPARADAS PARA POMODORO E BREAK?
+def timer_ended_embed_template(end_time, pomodoro):
     end_time_str = format_datetime_or_timedelta(end_time)
     title = "Período de estudo ⏰" if pomodoro else "Pausa ⏰"
     embed = discord.Embed(title=title, description="Terminado", color=EMBED_COLOR)
@@ -26,7 +28,8 @@ def break_ended_embed_template(end_time, pomodoro):
     embed.add_field(name="Tempo restante: ", value="Terminou", inline=False)
     return embed
 
-def break_ended_message_template(member, pomodoro):
+# TODO: CRIAR EMBED FUNCTIONS SEPARADAS PARA POMODORO E BREAK?
+def timer_ended_message_template(member, pomodoro):
     msg = "⏰ O período de estudo terminou, faz agora uma pausa" if pomodoro else "⏰ A pausa terminou, começa agora outro período de estudo"
     return f"{member.mention} {msg}"
 

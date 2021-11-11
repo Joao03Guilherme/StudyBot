@@ -6,7 +6,7 @@ import config
 timezone = pytz.timezone(config.TIMEZONE)
 
 
-def get_date_from_arguments(time_str):
+def get_date_from_duration(time_str):
     """
         Recebe uma string das formas: "x min", "x horas", "x horas y min" ou "xx:yy" e converte
         num objeto datetime timezone-aware em UTC
