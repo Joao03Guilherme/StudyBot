@@ -1,6 +1,7 @@
 <h1 align="center">StudyBot<project-name></h1>
 
 <p align="center">Um bot de Discord criado para apoiar um [servidor de estudo](https://discord.gg/RBST2BgDy3) <project-description></p>
+      [Lets go to Quora](https://www.quora.com)
 
 ## Features
 - Atribuição automática de Roles
