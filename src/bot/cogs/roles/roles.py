@@ -27,7 +27,7 @@ class roles(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        self.guild = self.client.get_guild(config.ID_GUILD)
+        self.guild = self.client.get_guild(config.ID_GUILD) # TODO: USE MESSAGE REACT LIKE ZIRA
 
         self.default_role = self.guild.get_role(config.ID_DEFAULT_ROLE)
         self.decimo_role = self.guild.get_role(config.ID_DECIMO_ROLE)

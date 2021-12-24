@@ -24,24 +24,20 @@ def dump_json():
 
 # TODO: UTILIZAR INHERITANCE DA CLASSE TIMER PARA AS CHILD CLASSES POMODORO E BREAK?
 class timer:
-    def __init__(self, guild, is_pomodoro, channel_id, pomodoro_duration, break_duration, long_break_duration,
-                 member_id, iteration, end_time=None, message_id=None):
+    def __init__(self, guild, is_pomodoro, channel_id, pomodoro_duration, break_duration,
+                 member_id, end_time=None, message_id=None):
         self.guild = guild
         self.is_pomodoro = is_pomodoro
         self.channel = guild.get_channel(channel_id)
         self.message = None if message_id is None else self.channel.get_partial_message(message_id)
         self.end_time = get_date_from_duration(
-            pomodoro_duration if self.is_pomodoro else
-            long_break_duration if iteration % (config.POMODORO_ITERATIONS * 2) == 0 else
-            break_duration
+            pomodoro_duration if self.is_pomodoro else break_duration
         ) if end_time is None else end_time
         self.pomodoro_duration = pomodoro_duration
         self.break_duration = break_duration
-        self.long_break_duration = long_break_duration
         self.member = guild.get_member(member_id)
         self.pomodoro_role = guild.get_role(config.ID_POMODORO_ROLE)
         self.default_role = guild.get_role(config.ID_DEFAULT_ROLE)
-        self.iteration = iteration
 
     async def create_initial_message(self):
         global timer_dict
@@ -75,9 +71,7 @@ class timer:
             self.channel.id,
             self.pomodoro_duration,
             self.break_duration,
-            self.long_break_duration,
             self.member.id,
-            self.iteration + 1
         )
 
         await next_timer.create_initial_message()
@@ -98,9 +92,7 @@ class timer:
             "channel_id": self.channel.id,
             "pomodoro_duration": self.pomodoro_duration,
             "break_duration": self.break_duration,
-            "long_break_duration": self.long_break_duration,
             "member_id": self.member.id,
-            "iteration": self.iteration,
             "end_time": self.end_time.strftime("%H:%M"),
             "message_id": self.message.id
         }
@@ -122,7 +114,7 @@ class pomodoro(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         self.guild = self.client.get_guild(config.ID_GUILD)
-        self.pomodoro_category = self.guild.get_channel(config.ID_POMODORO_CATEGORY)
+        self.pomodoro_category = self.guild.get_channel(config.ID_POMODORO_CATEGORY) # get_channel method also gets category
         self.pomodoro_role = self.guild.get_role(config.ID_POMODORO_ROLE)
         self.default_role = self.guild.get_role(config.ID_DEFAULT_ROLE)
         self.everyone_role = self.guild.get_role(config.ID_EVERYONE_ROLE)
@@ -144,9 +136,7 @@ class pomodoro(commands.Cog):
                     t["channel_id"],
                     t["pomodoro_duration"],
                     t["break_duration"],
-                    t["long_break_duration"],
                     t["member_id"],
-                    t["iteration"]
                 )
 
                 await timer_obj.end_pomodoro_session()
@@ -159,23 +149,26 @@ class pomodoro(commands.Cog):
         if message.channel.category == self.pomodoro_category and not message.content.startswith("!pomodoro"):
             await message.delete()
 
-    async def add_initial_timer(self, channel_id, member_id, pomodoro_duration, break_duration, long_break_duration):
+    async def add_initial_timer(self, channel_id, member_id, pomodoro_duration, break_duration):
         timer_obj = timer(
             self.guild,
             True,
             channel_id,
             pomodoro_duration,
             break_duration,
-            long_break_duration,
             member_id,
-            1
         )
         await timer_obj.create_initial_message()
 
     @commands.command(name="pomodoro")
     async def pomodoro(self, ctx, *args):
         member = ctx.message.author
-        await ctx.message.delete()  # Always remove message
+
+        try:
+            await ctx.message.delete()  # Always remove message
+        except discord.errors.Forbidden:
+            await member.send("⚠ Não é possível iniciar um pomodoro pelas mensagens privadas (DMs)")
+
 
         if self.pomodoro_role in member.roles:
             await member.send(
@@ -183,26 +176,24 @@ class pomodoro(commands.Cog):
                 "um temporizador")
             return
 
-        if len(args) != 3:
+        if len(args) != 2:
             await member.send(
-                "⚠️Utilização: `!pomodoro [duração do tempo de estudo] [duração do tempo de pausa curta] [duração do "
-                "tempo de pausa longa]`\n "
-                "Exemplos: `!pomodoro 45 10 15` ou `!pomodoro 25 5 10`")
+                "⚠️ Utilização: `!pomodoro [duração do tempo de estudo] [duração do tempo de pausa]\n"
+                "Exemplos: `!pomodoro 45 10` ou `!pomodoro 25 5`")
             return
 
-        if not (0 < int(args[0]) < 600 and 0 < int(args[1]) < 600 and 0 < int(args[2]) < 600):
+        if not 0 < int(args[0]) < 600 and 0 < int(args[1]) < 600 < 600:
             await member.send("⚠️ As durações especificadas não são válidas")
             return
 
-        if not (args[0].isnumeric() and args[1].isnumeric() and args[2].isnumeric()):
+        if not (args[0].isnumeric() and args[1].isnumeric()):
             await member.send("⚠️ As durações especificadas não são válidas")
 
         pomodoro_duration = args[0] + " min"
         break_duration = args[1] + " min"
-        long_break_duration = args[2] + " min"
 
         channel = await self.create_pomodoro_channel(member)
-        await self.add_initial_timer(channel.id, member.id, pomodoro_duration, break_duration, long_break_duration)
+        await self.add_initial_timer(channel.id, member.id, pomodoro_duration, break_duration)
 
     async def create_pomodoro_channel(self, member):
         # Setup channel visibility settings
@@ -215,10 +206,9 @@ class pomodoro(commands.Cog):
         await member.add_roles(self.pomodoro_role)
         await member.remove_roles(self.default_role)
 
-        channel = await self.guild.create_text_channel(name=f"Pomodoro {member.name}", category=self.pomodoro_category,
+        channel = await self.guild.create_text_channel(f"Pomodoro {member.name}", category=self.pomodoro_category,
                                                        overwrites=overwrites)
         await channel.send(pomodoro_initial_message_template(member))
-
         return channel
 
     @tasks.loop(seconds=1)
@@ -230,9 +220,7 @@ class pomodoro(commands.Cog):
                 t["channel_id"],
                 t["pomodoro_duration"],
                 t["break_duration"],
-                t["long_break_duration"],
                 t["member_id"],
-                t["iteration"],
                 get_date_from_duration(t["end_time"]),
                 t["message_id"]
             )

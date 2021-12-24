@@ -16,7 +16,7 @@ class announcements(commands.Cog):
 
     @commands.command(name="anunciar_canal")
     async def announcement_by_channel(self, ctx, *args):
-        guild =  ctx.message.guild 
+        guild = ctx.message.guild
         channel_id = int(args[0])
         announcement_channel = guild.get_channel(channel_id)
 
