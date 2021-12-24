@@ -1,6 +1,6 @@
 import os
 
-BOT_TOKEN = "ODc4Njc2OTgxNTUyNjY4Njky.YSEptQ.NvFUxaTsD5tojrrB4MQQlpPsj3g" # TODO: CHANGE BOT TOKEN BEFORE PUSHING
+BOT_TOKEN = os.getenv(BOT_TOKEN)
 CMD_PREFIX = "!"
 TIMEZONE = "Europe/Lisbon"
 
