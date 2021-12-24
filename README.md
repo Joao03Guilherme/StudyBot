@@ -13,5 +13,4 @@
 
 - [ ] Exercícios semanais de diversas disciplinas
 - [ ] Maior auto-moderação
-      
-
+- [ ] Melhorar a atribuição automática de roles    
