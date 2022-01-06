@@ -2,7 +2,7 @@ from nextcord.ext import commands
 from .questions_messages import initial_question_embed_template, solved_question_embed_template, \
     close_question_embed_template
 import config
-import discord
+import nextcord
 import json
 import os
 
@@ -136,7 +136,7 @@ class questions(commands.Cog):
                     del stored_questions[member.id][i]
 
         # Create new message and add to user question list in dict
-        discipline_role = discord.utils.get(member.guild.roles, name=discipline_name)
+        discipline_role = nextcord.utils.get(member.guild.roles, name=discipline_name)
         new_question = question(self.guild, member.id, channel.id, discipline_role.id, False, None)
         await new_question.initial_question_message()
 

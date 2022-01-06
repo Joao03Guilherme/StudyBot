@@ -1,8 +1,10 @@
-from nextcord.ext import commands
 import config
+from nextcord.ext import commands
+
 
 def may_use_command(ctx):
     return any("admin" == role.name for role in ctx.message.author.roles)
+
 
 class announcements(commands.Cog):
     def __init__(self, client):

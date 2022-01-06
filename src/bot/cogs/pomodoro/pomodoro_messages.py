@@ -14,7 +14,7 @@ def timer_running_embed_template(end_time, pomodoro):
     time_remaining_str = format_datetime_or_timedelta(time_remaining)
 
     title = "Período de estudo ⏰" if pomodoro else "Pausa ⏰"
-    embed = discord.Embed(title=title, color=EMBED_COLOR)
+    embed = nextcord.Embed(title=title, color=EMBED_COLOR)
     embed.add_field(name="Até às: ", value=end_time_str, inline=False)
     embed.add_field(name="Tempo restante: ", value=time_remaining_str, inline=False)
     return embed
@@ -23,7 +23,7 @@ def timer_running_embed_template(end_time, pomodoro):
 def timer_ended_embed_template(end_time, pomodoro):
     end_time_str = format_datetime_or_timedelta(end_time)
     title = "Período de estudo ⏰" if pomodoro else "Pausa ⏰"
-    embed = discord.Embed(title=title, description="Terminado", color=EMBED_COLOR)
+    embed = nextcord.Embed(title=title, description="Terminado", color=EMBED_COLOR)
     embed.add_field(name="Até às: ", value=end_time_str, inline=False)
     embed.add_field(name="Tempo restante: ", value="Terminou", inline=False)
     return embed
