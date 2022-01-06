@@ -1,11 +1,11 @@
-import discord
+import nextcord
 import config
 import os
 import json
 from .pomodoro_messages import timer_running_embed_template, timer_ended_embed_template, timer_ended_message_template, \
     pomodoro_initial_message_template
 from .utils import get_date_from_duration, is_time_in_past
-from discord.ext import commands, tasks
+from nextcord.ext import commands, tasks
 
 here = os.path.dirname(os.path.abspath(__file__))
 filename = os.path.join(here, 'stored_timers.json')
@@ -166,7 +166,7 @@ class pomodoro(commands.Cog):
 
         try:
             await ctx.message.delete()  # Always remove message
-        except discord.errors.Forbidden:
+        except nextcord.errors.Forbidden:
             await member.send("⚠ Não é possível iniciar um pomodoro pelas mensagens privadas (DMs)")
 
 
@@ -198,9 +198,9 @@ class pomodoro(commands.Cog):
     async def create_pomodoro_channel(self, member):
         # Setup channel visibility settings
         overwrites = {
-            self.default_role: discord.PermissionOverwrite(view_channel=False),
-            member: discord.PermissionOverwrite(view_channel=True, send_messages=False),
-            self.everyone_role: discord.PermissionOverwrite(view_channel=False),
+            self.default_role: nextcord.PermissionOverwrite(view_channel=False),
+            member: nextcord.PermissionOverwrite(view_channel=True, send_messages=False),
+            self.everyone_role: nextcord.PermissionOverwrite(view_channel=False),
         }
 
         await member.add_roles(self.pomodoro_role)

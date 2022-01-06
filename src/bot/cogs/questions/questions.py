@@ -1,4 +1,4 @@
-from discord.ext import commands
+from nextcord.ext import commands
 from .questions_messages import initial_question_embed_template, solved_question_embed_template, \
     close_question_embed_template
 import config

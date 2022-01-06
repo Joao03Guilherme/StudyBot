@@ -1,6 +1,6 @@
 import os
 
-BOT_TOKEN = os.getenv(BOT_TOKEN)
+BOT_TOKEN = os.getenv("BOT_TOKEN") # TODO: REMOVE THIS
 CMD_PREFIX = "!"
 TIMEZONE = "Europe/Lisbon"
 

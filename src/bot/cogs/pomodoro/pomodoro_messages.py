@@ -1,5 +1,5 @@
 from datetime import datetime
-import discord
+import nextcord
 from .utils import format_datetime_or_timedelta
 import pytz
 

@@ -1,9 +1,10 @@
-import discord
+import nextcord
 import os
 import config
 import json
-from discord.ext import commands
+from nextcord.ext import commands
 from .roles_messages import role_message, role_message_uni, role_message_disciplines, greet_message
+from .roles_dropdowns import YearDropdownViewer, SubjectDropdownViewer, GamingDropdownViewer
 
 here = os.path.dirname(os.path.abspath(__file__))
 filename = os.path.join(here, 'stored_values.json')
@@ -14,12 +15,8 @@ with open(filename) as file:
     except FileNotFoundError:
         storage = {}
 
-
-def may_use_command(member):
-    allowed_roles = ["admin"]
-    roles = [discord.utils.get(member.guild.roles, name=role_name) for role_name in allowed_roles]
-    return any(role in roles for role in member.roles)
-
+def may_use_command(ctx):
+    return any(role.name == "admin" for role in ctx.message.author.roles)
 
 class roles(commands.Cog):
     def __init__(self, client):
@@ -27,7 +24,7 @@ class roles(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        self.guild = self.client.get_guild(config.ID_GUILD) # TODO: USE MESSAGE REACT LIKE ZIRA
+        self.guild = self.client.get_guild(config.ID_GUILD)
 
         self.default_role = self.guild.get_role(config.ID_DEFAULT_ROLE)
         self.decimo_role = self.guild.get_role(config.ID_DECIMO_ROLE)
@@ -122,6 +119,16 @@ class roles(commands.Cog):
                 await member.remove_roles(self.geo_role)
             elif str(payload.emoji) == "🇵🇹":
                 await member.remove_roles(self.pt_role)
+
+    @commands.command(name="enviar")
+    async def enviar(self, ctx):
+        v1, v2, v3 = YearDropdownViewer(ctx), SubjectDropdownViewer(), GamingDropdownViewer()
+        await ctx.send("Seleciona o teu ano", view=v1)
+        await ctx.send("Seleciona as tuas disciplinas", view=v2)
+        await ctx.send("Seleciona as tuas roles de gaming", view=v3)
+
+        interaction = await self.client.wait_for("select_option")
+        await ctx.send(interaction.values)
 
     @commands.command(name="send_role_message")
     @commands.guild_only()

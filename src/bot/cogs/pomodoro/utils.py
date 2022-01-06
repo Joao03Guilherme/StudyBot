@@ -1,6 +1,6 @@
 from datetime import time, datetime, timedelta
 import pytz
-from discord.errors import InvalidArgument
+from nextcord.errors import InvalidArgument
 import config
 
 timezone = pytz.timezone(config.TIMEZONE)
