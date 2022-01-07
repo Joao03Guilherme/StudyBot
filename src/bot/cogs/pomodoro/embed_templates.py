@@ -43,7 +43,7 @@ def pomodoro_initial_message_template(member):
     msg = f"Olá {member.mention}!\n" \
           "Apenas tu consegues ver este canal 🔐.\n" \
           "Alguns canais foram ocultados para te focares no estudo 📘.\n" \
-          "Se quiseres terminar a sessão de estudo, basta carregar no 🔴 do temporizador atual 🕐.\n" \
+          "Se quiseres terminar a sessão de estudo, escreve `/end_pomodoro`.\n" \
           "Bom estudo! 💯"
     return msg
 
