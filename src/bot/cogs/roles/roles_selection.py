@@ -84,7 +84,7 @@ class GamingDropdown(nextcord.ui.Select):
 
 class StudySessionButton(nextcord.ui.Button):
     def __init__(self, study_session_role):
-        super().__init__(style=nextcord.ButtonStyle.blurple, label="Sessões de estudo")
+        super().__init__(style=nextcord.ButtonStyle.blurple, label="Sessões de estudo", custom_id="StudySessionButton")
         self.study_session_role = study_session_role
 
     async def callback(self, interaction: nextcord.Interaction):

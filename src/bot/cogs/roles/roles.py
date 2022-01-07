@@ -12,6 +12,7 @@ def may_use_command(ctx):
 class roles(commands.Cog):
     def __init__(self, client):
         self.client = client
+        self.persistent_views_added = False
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -44,6 +45,13 @@ class roles(commands.Cog):
         self.rules_channel = self.client.get_channel(config.ID_RULES_CHANNEL)
         self.roles_channel = self.client.get_channel(config.ID_ROLES_CHANNEL)
         self.greet_channel = self.client.get_channel(config.ID_GREET_CHANNEL)
+
+        views = [YearDropdownViewer(self.year_roles), SubjectDropdownViewer(self.subject_roles),
+                 GamingDropdownViewer(self.gaming_roles), StudySessionButtonViewer(self.study_session_role)]
+        if not self.persistent_views_added:
+            for view in views:
+                self.client.add_view(view)
+        self.persistent_views_added = True
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
