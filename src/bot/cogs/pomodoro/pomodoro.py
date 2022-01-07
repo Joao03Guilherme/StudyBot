@@ -147,7 +147,7 @@ class pomodoro(commands.Cog):
 
     @tasks.loop(seconds=1)
     async def update_timers(self):
-        for session in session_dict.values():
+        for session in list(session_dict.values()):
             if session.current_timer is None: continue
             if is_time_in_past(session.current_timer.end_time):
                 await session.current_timer.end_timer()
