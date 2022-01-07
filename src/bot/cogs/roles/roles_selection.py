@@ -21,7 +21,8 @@ class YearDropdown(nextcord.ui.Select):
                     await user.remove_roles(role)
 
             await user.add_roles(self.role_dict[self.values[0]])
-            await interaction.response.send_message(f"✅ A role foi aplicada com sucesso.", ephemeral=True)
+            await interaction.response.send_message(f"✅ A role `{self.role_dict[self.values[0]].name}` foi aplicada "
+                                                    f"com sucesso.", ephemeral=True)
         except:
             await interaction.response.send_message(f"❌ Ocorreu um erro a aplicar a role", ephemeral=True)
 
@@ -50,14 +51,10 @@ class SubjectDropdown(nextcord.ui.Select):
             for role in self.values:
                 await user.add_roles(self.role_dict[role])
 
-            if len(self.values) == 1:
-                await interaction.response.send_message(f"✅ A disciplina selecionada foi aplicada com sucesso.",
-                                                        ephemeral=True)
-            else:
-                await interaction.response.send_message(f"✅ As disciplinas selecionadas foram aplicadas com sucesso.",
-                                                        ephemeral=True)
+            await interaction.response.send_message(f"✅ As alterações foram efetuadas com sucesso.",
+                                                    ephemeral=True)
         except:
-            await interaction.response.send_message(f"❌ Ocorreu um erro a aplicar a role.", ephemeral=True)
+            await interaction.response.send_message(f"❌ Ocorreu um erro.", ephemeral=True)
 
 
 class GamingDropdown(nextcord.ui.Select):
@@ -107,23 +104,23 @@ class StudySessionButton(nextcord.ui.Button):
 
 class YearDropdownViewer(nextcord.ui.View):
     def __init__(self, role_dict):
-        super().__init__()
+        super().__init__(timeout=None)
         self.add_item(YearDropdown(role_dict))
 
 
 class SubjectDropdownViewer(nextcord.ui.View):
     def __init__(self, role_dict):
-        super().__init__()
+        super().__init__(timeout=None)
         self.add_item(SubjectDropdown(role_dict))
 
 
 class GamingDropdownViewer(nextcord.ui.View):
     def __init__(self, role_dict):
-        super().__init__()
+        super().__init__(timeout=None)
         self.add_item(GamingDropdown(role_dict))
 
 
 class StudySessionButtonViewer(nextcord.ui.View):
     def __init__(self, study_session_role):
-        super().__init__()
+        super().__init__(timeout=None)
         self.add_item(StudySessionButton(study_session_role))
