@@ -30,7 +30,6 @@ class timer:
         emb = timer_embed_template(self.end_time)
         await self.message.edit(embed=emb)
 
-
 class pomodoro_session:
     def __init__(self, member, roles_and_category, pomodoro_duration: timedelta, break_duration: timedelta):
         self.member = member
@@ -103,6 +102,9 @@ def is_valid_time_argument(time: int):
 def is_time_in_past(time: datetime):
     return time <= datetime.today()
 
+def may_use_command(member):
+    return any("admin" == role.name for role in member.roles)
+
 
 class pomodoro(commands.Cog):
     def __init__(self, client):
@@ -144,6 +146,22 @@ class pomodoro(commands.Cog):
             await session.end_session()
 
             del session_dict[interaction.user]
+
+    @commands.check(may_use_command)
+    @nextcord.slash_command(name="force_end_pomodoro", description="Força o fim de uma sessão pomodoro")
+    async def force_end_pomodoro(self, interaction : nextcord.Interaction,
+                                 arg1 = nextcord.SlashOption(name="member_id", description="Id do membro preso no pomodoro"),
+                                 arg2 = nextcord.SlashOption(name="channel_id", description="Id do canal do pomodoro")
+    ):
+        try:
+            member = self.roles.guild.get_member(int(arg1))
+            channel = self.roles.guild.get_channel(int(arg2))
+            await member.add_roles(self.roles.default_role)
+            await member.remove_roles(self.roles.pomodoro_role)
+            await channel.delete()
+            await interaction.send("A sessão foi eliminado com sucesso", ephemeral=True)
+        except:
+            await interaction.send("Ocorreu um erro a eliminar o pomodoro", ephemeral=True)
 
     @tasks.loop(seconds=1)
     async def update_timers(self):
