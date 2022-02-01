@@ -1,6 +1,7 @@
 import asyncio
 from datetime import datetime, timedelta
 
+import pytz
 import pickle
 import os
 import sys
@@ -8,7 +9,7 @@ import config
 import nextcord
 from nextcord.ext import commands, tasks
 
-from .embed_templates import timer_embed_template, pomodoro_initial_message_template, pomodoro_timer_begins_template, \
+from .embed_templates import timer_ended_embed_template, timer_embed_template, pomodoro_initial_message_template, pomodoro_timer_begins_template, \
     break_timer_begins_template
 
 # Permanent storage of timers
@@ -32,7 +33,7 @@ class timer:
         await self.message.edit(embed=emb)
 
     async def end_timer(self):
-        emb = timer_embed_template(self.end_time)
+        emb = timer_ended_embed_template(self.end_time)
         await self.message.edit(embed=emb)
 
     def to_dict(self):
@@ -103,7 +104,7 @@ class pomodoro_session:
             "is_current_timer_pomodoro" : self.is_current_timer_pomodoro,
             "current_timer_dict" : self.current_timer.to_dict(),
             "pomodoro_duration" : self.pomodoro_duration,
-            "beak_duration" : self.break_duration
+            "break_duration" : self.break_duration
         }
 
 # Data class
@@ -117,11 +118,7 @@ class roles_and_category_class:
         self.everyone_role = self.guild.get_role(config.ID_EVERYONE_ROLE)
 
 async def from_dict_to_obj(val, roles : roles_and_category_class):
-    global session_dict
-    temp_dict = {}
-    for key in session_dict.keys():
-        val = session_dict[key]
-        temp_dict[key] = pomodoro_session(
+   return pomodoro_session(
             roles.guild.get_member(val["member_id"]),
             roles,
             val["pomodoro_duration"],
@@ -134,7 +131,6 @@ async def from_dict_to_obj(val, roles : roles_and_category_class):
                       val["current_timer_dict"]["message_id"])
                   )
         )
-    session_dict = temp_dict
 
 
 # time is in minutes
@@ -157,7 +153,18 @@ class pomodoro(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
+        global session_dict
         self.roles = roles_and_category_class(self.client)
+
+        # Load dictionary
+        # try:
+        with open(abs_path, "rb") as file:
+            tmp_dict = pickle.load(file)
+            for key in tmp_dict.keys():
+                val = tmp_dict[key]
+                session_dict[key] = await from_dict_to_obj(val, self.roles)
+        # except:
+            # print("Ficheiro ainda não criado", file=sys.stderr)
 
     @nextcord.slash_command(name="pomodoro", description="Cria uma sessão de estudo Pomodoro")
     async def pomodoro(self, interaction: nextcord.Interaction,
@@ -181,15 +188,15 @@ class pomodoro(commands.Cog):
     @nextcord.slash_command(name="end_pomodoro", description="Termina uma sessão de estudo Pomodoro")
     async def end_pomodoro(self, interaction: nextcord.Interaction):
         global session_dict
-        if interaction.user not in session_dict.keys():
+        if interaction.user.id not in session_dict.keys():
             await interaction.send("Não estás numa sessão de estudo Pomodoro", ephemeral=True)
         else:
-            session = session_dict[interaction.user]
+            session = session_dict[interaction.user.id]
             await interaction.send("A terminar sessão pomodoro...", ephemeral=True)
             await asyncio.sleep(1)
             await session.end_session()
 
-            del session_dict[interaction.user]
+            del session_dict[interaction.user.id]
 
     @commands.check(may_use_command)
     @nextcord.slash_command(name="force_end_pomodoro", description="Força o fim de uma sessão pomodoro")
@@ -204,27 +211,25 @@ class pomodoro(commands.Cog):
             await member.add_roles(self.roles.default_role)
             await member.remove_roles(self.roles.pomodoro_role)
             await channel.delete()
-            await interaction.send("A sessão foi eliminado com sucesso", ephemeral=True)
+            await interaction.send("A sessão foi eliminada com sucesso", ephemeral=True)
         except:
             await interaction.send("Ocorreu um erro a eliminar o pomodoro", ephemeral=True)
 
     @tasks.loop(seconds=1)
     async def update_timers(self):
         global session_dict
-        try:
-            # Load dictionary
-            with open(abs_path, "rb") as file:
-                tmp_dict = pickle.load(file)
-                for key in tmp_dict.keys():
-                    val = tmp_dict[key]
-                    session_dict[key] = from_dict_to_obj(val, self.roles)
 
+        try:
             # Store dictionary
             with open(abs_path, "wb") as file:
                 converted_dict = {}
                 for key in session_dict.keys():
                     val = session_dict[key]
-                    converted_dict[key] = val.to_dict()
+                    try:
+                        converted_dict[key] = val.to_dict()
+                    except AttributeError:
+                        # Channel hasn't been created yet
+                        pass
                 pickle.dump(converted_dict, file)
 
             for session in list(session_dict.values()):
@@ -236,14 +241,16 @@ class pomodoro(commands.Cog):
                     await session.timer_started_message()
                     await session.send_timer()
                 else:
-                    await session.current_timer.edit_message()
+                    try:
+                        await session.current_timer.edit_message()
+                    except nextcord.errors.NotFound:
+                        del session_dict[session.member.id]
         except:
             print("Ocorreu um erro a dar update dos timers", file=sys.stderr)
 
     @update_timers.before_loop
     async def before_update_timers(self):
         await self.client.wait_until_ready()
-
 
 def setup(client):
     client.add_cog(pomodoro(client))
