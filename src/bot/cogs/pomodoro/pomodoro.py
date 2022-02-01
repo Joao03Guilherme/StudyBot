@@ -1,7 +1,6 @@
 import asyncio
 from datetime import datetime, timedelta
 
-import pytz
 import pickle
 import os
 import sys
@@ -36,6 +35,10 @@ class timer:
         emb = timer_ended_embed_template(self.end_time)
         await self.message.edit(embed=emb)
 
+    """
+    Returns a dict representation of the object
+    It will be used in to_dict function from class pomodoro_session
+    """
     def to_dict(self):
         return {
             "end_time"  : self.end_time,
@@ -97,6 +100,9 @@ class pomodoro_session:
         await self.member.remove_roles(self.roles_and_category.pomodoro_role)
         await self.channel.delete()
 
+    """
+    Returns a dict representation of a pomodoro section
+    """
     def to_dict(self):
         return {
             "member_id" : self.member.id,
@@ -117,18 +123,21 @@ class roles_and_category_class:
         self.default_role = self.guild.get_role(config.ID_DEFAULT_ROLE)
         self.everyone_role = self.guild.get_role(config.ID_EVERYONE_ROLE)
 
-async def from_dict_to_obj(val, roles : roles_and_category_class):
+"""
+Converts dict to pomodoro_session object
+"""
+async def from_dict_to_obj(dict, roles : roles_and_category_class):
    return pomodoro_session(
-            roles.guild.get_member(val["member_id"]),
+            roles.guild.get_member(dict["member_id"]),
             roles,
-            val["pomodoro_duration"],
-            val["break_duration"],
-            roles.guild.get_channel(val["channel_id"]),
-            timer(val["current_timer_dict"]["end_time"],
-                  roles.guild.get_member(val["current_timer_dict"]["member_id"]),
-                  roles.guild.get_channel(val["current_timer_dict"]["channel_id"]),
-                  await roles.guild.get_channel(val["current_timer_dict"]["channel_id"]).fetch_message(
-                      val["current_timer_dict"]["message_id"])
+            dict["pomodoro_duration"],
+            dict["break_duration"],
+            roles.guild.get_channel(dict["channel_id"]),
+            timer(dict["current_timer_dict"]["end_time"],
+                  roles.guild.get_member(dict["current_timer_dict"]["member_id"]),
+                  roles.guild.get_channel(dict["current_timer_dict"]["channel_id"]),
+                  await roles.guild.get_channel(dict["current_timer_dict"]["channel_id"]).fetch_message(
+                      dict["current_timer_dict"]["message_id"])
                   )
         )
 
@@ -157,14 +166,14 @@ class pomodoro(commands.Cog):
         self.roles = roles_and_category_class(self.client)
 
         # Load dictionary
-        # try:
-        with open(abs_path, "rb") as file:
-            tmp_dict = pickle.load(file)
-            for key in tmp_dict.keys():
-                val = tmp_dict[key]
-                session_dict[key] = await from_dict_to_obj(val, self.roles)
-        # except:
-            # print("Ficheiro ainda não criado", file=sys.stderr)
+        try:
+            with open(abs_path, "rb") as file:
+                tmp_dict = pickle.load(file)
+                for key in tmp_dict.keys():
+                    val = tmp_dict[key]
+                    session_dict[key] = await from_dict_to_obj(val, self.roles)
+        except FileNotFoundError:
+            print("Ficheiro ainda não criado", file=sys.stderr)
 
     @nextcord.slash_command(name="pomodoro", description="Cria uma sessão de estudo Pomodoro")
     async def pomodoro(self, interaction: nextcord.Interaction,
@@ -220,7 +229,7 @@ class pomodoro(commands.Cog):
         global session_dict
 
         try:
-            # Store dictionary
+            # Store dictionary representation in the file
             with open(abs_path, "wb") as file:
                 converted_dict = {}
                 for key in session_dict.keys():
@@ -228,7 +237,8 @@ class pomodoro(commands.Cog):
                     try:
                         converted_dict[key] = val.to_dict()
                     except AttributeError:
-                        # Channel hasn't been created yet
+                        # Message or channel might be None (not created yet)
+                        # Thus, .id attribute isn't valid
                         pass
                 pickle.dump(converted_dict, file)
 
@@ -244,6 +254,7 @@ class pomodoro(commands.Cog):
                     try:
                         await session.current_timer.edit_message()
                     except nextcord.errors.NotFound:
+                        # Timer message might be already deleted (None)
                         del session_dict[session.member.id]
         except:
             print("Ocorreu um erro a dar update dos timers", file=sys.stderr)

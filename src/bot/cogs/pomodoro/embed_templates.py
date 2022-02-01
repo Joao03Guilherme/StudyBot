@@ -34,8 +34,8 @@ def timer_embed_template(end_time):
 def timer_ended_embed_template(end_time):
     end_time_str = end_time.astimezone(timezone).strftime("%H:%M")
     title = "Temporizador terminado ⏰"
-    embed = nextcord.Embed(title=title, description="Terminado", color=EMBED_COLOR)
-    embed.add_field(name="Até às: ", value=end_time_str, inline=False)
+    embed = nextcord.Embed(title=title, color=EMBED_COLOR)
+    embed.add_field(name="Terminado às: ", value=end_time_str, inline=False)
     return embed
 
 
