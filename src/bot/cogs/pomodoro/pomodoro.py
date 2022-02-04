@@ -175,11 +175,28 @@ class pomodoro(commands.Cog):
         except FileNotFoundError:
             print("Ficheiro ainda não criado", file=sys.stderr)
 
+    @staticmethod
+    async def store_dict_in_file():
+        # Store dictionary representation in the file
+        with open(abs_path, "wb") as file:
+            converted_dict = {}
+            for key in session_dict.keys():
+                val = session_dict[key]
+                try:
+                    converted_dict[key] = val.to_dict()
+                except AttributeError:
+                    # Message or channel might be None (not created yet)
+                    # Thus, .id attribute isn't valid
+                    pass
+            pickle.dump(converted_dict, file)
+
     @nextcord.slash_command(name="pomodoro", description="Cria uma sessão de estudo Pomodoro")
     async def pomodoro(self, interaction: nextcord.Interaction,
                        arg1: int = nextcord.SlashOption(name="estudo", description="Tempo de estudo (min)"),
                        arg2: int = nextcord.SlashOption(name="pausa", description="Tempo de pausa (min)"),
                        ):
+        global session_dict
+
         if not (is_valid_time_argument(arg1) and is_valid_time_argument(arg2)):
             await interaction.send("Os argumentos inseridos são inválidos", ephemeral=True)
             return
@@ -189,10 +206,10 @@ class pomodoro(commands.Cog):
 
         pomodoro_duration, break_duration = timedelta(minutes=arg1), timedelta(minutes=arg2)
         new_session = pomodoro_session(interaction.user, self.roles, pomodoro_duration, break_duration)
-
-        global session_dict
-        session_dict[interaction.user.id] = new_session
         await new_session.start_session()
+
+        session_dict[interaction.user.id] = new_session
+        await self.store_dict_in_file()
 
     @nextcord.slash_command(name="end_pomodoro", description="Termina uma sessão de estudo Pomodoro")
     async def end_pomodoro(self, interaction: nextcord.Interaction):
@@ -206,6 +223,7 @@ class pomodoro(commands.Cog):
             await session.end_session()
 
             del session_dict[interaction.user.id]
+            await self.store_dict_in_file()
 
     @commands.check(may_use_command)
     @nextcord.slash_command(name="force_end_pomodoro", description="Força o fim de uma sessão pomodoro")
@@ -227,21 +245,7 @@ class pomodoro(commands.Cog):
     @tasks.loop(seconds=1)
     async def update_timers(self):
         global session_dict
-
         try:
-            # Store dictionary representation in the file
-            with open(abs_path, "wb") as file:
-                converted_dict = {}
-                for key in session_dict.keys():
-                    val = session_dict[key]
-                    try:
-                        converted_dict[key] = val.to_dict()
-                    except AttributeError:
-                        # Message or channel might be None (not created yet)
-                        # Thus, .id attribute isn't valid
-                        pass
-                pickle.dump(converted_dict, file)
-
             for session in list(session_dict.values()):
                 if session.current_timer is None: continue
                 if is_time_in_past(session.current_timer.end_time):
