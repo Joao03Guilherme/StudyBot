@@ -171,7 +171,10 @@ class pomodoro(commands.Cog):
                 tmp_dict = pickle.load(file)
                 for key in tmp_dict.keys():
                     val = tmp_dict[key]
-                    session_dict[key] = await from_dict_to_obj(val, self.roles)
+                    try:
+                        session_dict[key] = await from_dict_to_obj(val, self.roles)
+                    except AttributeError:
+                        print(val, file=sys.stderr)
         except FileNotFoundError:
             print("Ficheiro ainda não criado", file=sys.stderr)
 
