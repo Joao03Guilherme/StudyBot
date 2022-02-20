@@ -11,6 +11,6 @@
 
 ## Updates Futuros
 
+- [x] Melhorar a atribuição automática de roles    
 - [ ] Exercícios semanais de diversas disciplinas
 - [ ] Maior auto-moderação
-- [x] Melhorar a atribuição automática de roles    
