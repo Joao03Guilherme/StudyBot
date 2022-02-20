@@ -62,8 +62,9 @@ class GamingDropdown(nextcord.ui.Select):
         options = [
             nextcord.SelectOption(label="Fanático dos jogos", value="FJOGOS", emoji="🎮"),
             nextcord.SelectOption(label="Gamer casual", value="JOGOS", emoji="🎲"),
+            nextcord.SelectOption(label="Jogador de Xadrez", value="XADREZ", emoji="♟")
         ]
-        super().__init__(placeholder="Se gostares de jogos, escolhe uma opção", max_values=2, min_values=0,
+        super().__init__(placeholder="Se gostares de jogar alguma coisa, escolhe uma opção", max_values=2, min_values=0,
                          options=options, custom_id="GamingDropdown")
         self.role_dict = role_dict
 

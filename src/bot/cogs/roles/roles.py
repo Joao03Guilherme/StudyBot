@@ -38,6 +38,7 @@ class roles(commands.Cog):
         self.gaming_roles = {
             "JOGOS": self.guild.get_role(config.ID_JOGOS_ROLE),
             "FJOGOS": self.guild.get_role(config.ID_FJOGOS_ROLE),
+            "XADREZ": self.guild.get_role(config.ID_XADREZ_ROLE)
         }
 
         self.study_session_role = self.guild.get_role(config.ID_STUDYSESSION_ROLE)
