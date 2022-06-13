@@ -27,7 +27,7 @@ class messages(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         content = message.content.lower()
-        for segment in banned_segments
+        for segment in banned_segments:
             for word in segment:
                 if word not in content:
                     return
