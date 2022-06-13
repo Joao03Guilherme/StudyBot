@@ -28,29 +28,28 @@ class messages(commands.Cog):
     async def on_message(self, message):
         content = message.content.lower()
         for segment in banned_segments:
-            for word in segment:
-                if word not in content:
+            if all(word in content for word in segment):
+                member = message.author
+                if any(role.name in allowed_roles for role in member.roles):
                     return
 
-        member = message.author
-        if any(role.name in allowed_roles for role in member.roles):
-            return
+                await member.ban(reason="Blacklisted message")
+                try:
+                    ban_msg.replace("{USER_MENTION}", member.mention)
+                    await member.send(ban_msg)
+                except nextcord.errors.Forbidden:
+                    pass  # Can't send message to user
 
-        await member.ban(reason="Blacklisted message")
-        try:
-            ban_msg.replace("{USER_MENTION}", member.mention)
-            await member.send(ban_msg)
-        except nextcord.errors.Forbidden:
-            pass  # Can't send message to user
+                await asyncio.sleep(10)
+                await member.unban()
 
-        await asyncio.sleep(10)
-        await member.unban()
-
-        # Alert staff
-        await self.staff_channel.send(f"O utilizador _{member.name}_ enviou uma mensagem que está blacklisted.  \n\
-            As ações necessárias já foram tomadas.\n\
-            Segue-se a mensagem que foi enviada pelo utilizador: \n\
-            " + message.content)
+                # Alert staff
+                await self.staff_channel.send(f"O utilizador _{member.name}_ enviou uma mensagem que está blacklisted.  \n\
+                    As ações necessárias já foram tomadas.\n\
+                    Segue-se a mensagem que foi enviada pelo utilizador: \n\
+                    " + message.content)
+                
+                break
 
 
 def setup(client):
