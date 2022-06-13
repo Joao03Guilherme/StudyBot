@@ -1,10 +1,13 @@
 import asyncio
-
 import config
 import nextcord.errors
 from nextcord.ext import commands
 
-l = ["nitro", "http", "@everyone"]
+banned_segments = [
+    ["nitro", "http", "@everyone"],
+    ["@everyone", "https://discord.gg/"]
+]
+
 allowed_roles = ["admin"]
 ban_msg = """
 Olá {USER_MENTION} 👋
@@ -24,15 +27,16 @@ class messages(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         content = message.content.lower()
-        for part in l:
-            if part not in content:
-                return
+        for segment in banned_segments
+            for word in segment:
+                if word not in content:
+                    return
 
         member = message.author
         if any(role.name in allowed_roles for role in member.roles):
             return
 
-        await member.ban(reason="Discord nitro spam")
+        await member.ban(reason="Blacklisted message")
         try:
             ban_msg.replace("{USER_MENTION}", member.mention)
             await member.send(ban_msg)
@@ -43,8 +47,10 @@ class messages(commands.Cog):
         await member.unban()
 
         # Alert staff
-        await self.staff_channel.send(f"O utilizador _{member.name}_ deu fake nitro spam. \
-        \nAs ações necessárias já foram tomadas.")
+        await self.staff_channel.send(f"O utilizador _{member.name}_ enviou uma mensagem que está blacklisted.  \n\
+            As ações necessárias já foram tomadas.\n\
+            Segue-se a mensagem que foi enviada pelo utilizador: \n\
+            " + message.content)
 
 
 def setup(client):
